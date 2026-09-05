@@ -96,6 +96,7 @@
 #include "extensions/openxr_meta_performance_metrics_extension.h"
 #include "extensions/openxr_meta_recommended_layer_resolution_extension.h"
 #include "extensions/openxr_meta_simultaneous_hands_and_controllers_extension.h"
+#include "extensions/openxr_meta_spatial_entity_group_sharing_extension.h"
 #include "extensions/openxr_meta_spatial_entity_mesh_extension.h"
 #include "extensions/openxr_ml_marker_understanding_extension.h"
 #include "extensions/openxr_session_helper_extension.h"
@@ -217,6 +218,7 @@ void initialize_plugin_module(ModuleInitializationLevel p_level) {
 			GDREGISTER_CLASS(OpenXRMetaSimultaneousHandsAndControllersExtension);
 			GDREGISTER_CLASS(OpenXRMetaHeadsetIDExtension);
 			GDREGISTER_CLASS(OpenXRMetaColocationDiscoveryExtension);
+			GDREGISTER_CLASS(OpenXRMetaSpatialEntityGroupSharingExtension);
 			GDREGISTER_CLASS(OpenXRMetaSpatialEntityMeshExtension);
 			GDREGISTER_CLASS(OpenXRFbSceneExtension);
 			GDREGISTER_CLASS(OpenXRFbFaceTrackingExtension);
@@ -278,6 +280,7 @@ void initialize_plugin_module(ModuleInitializationLevel p_level) {
 				if (meta_anchor_sharing) {
 					_register_extension_with_openxr(OpenXRFbSpatialEntitySharingExtension::get_singleton());
 					_register_extension_with_openxr(OpenXRFbSpatialEntityUserExtension::get_singleton());
+					_register_extension_with_openxr(OpenXRMetaSpatialEntityGroupSharingExtension::get_singleton());
 				}
 			}
 
@@ -443,6 +446,7 @@ void initialize_plugin_module(ModuleInitializationLevel p_level) {
 			_register_extension_as_singleton(OpenXRMetaSimultaneousHandsAndControllersExtension::get_singleton());
 			_register_extension_as_singleton(OpenXRMetaHeadsetIDExtension::get_singleton());
 			_register_extension_as_singleton(OpenXRMetaColocationDiscoveryExtension::get_singleton());
+			_register_extension_as_singleton(OpenXRMetaSpatialEntityGroupSharingExtension::get_singleton());
 			_register_extension_as_singleton(OpenXRFbBodyTrackingExtension::get_singleton());
 			_register_extension_as_singleton(OpenXRHtcFacialTrackingExtension::get_singleton());
 			_register_extension_as_singleton(OpenXRHtcPassthroughExtension::get_singleton());
