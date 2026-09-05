@@ -408,12 +408,14 @@ String MetaEditorExportPlugin::_get_android_manifest_element_contents(const Ref<
 	// Check for EXT spatial entities, or the Meta anchor or scene APIs.
 	if ((bool)project_settings->get_setting_with_override("xr/openxr/extensions/spatial_entity/enabled") ||
 			(bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/scene_api") ||
-			(bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/anchor_api")) {
+			(bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/anchor_api") ||
+			(bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/spatial_entity_group_sharing")) {
 		contents += "    <uses-permission android:name=\"com.oculus.permission.USE_ANCHOR_API\" />\n";
 	}
 
 	// Check for anchor sharing
-	if ((bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/anchor_sharing")) {
+	if ((bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/anchor_sharing") ||
+			(bool)project_settings->get_setting_with_override("xr/openxr/extensions/meta/spatial_entity_group_sharing")) {
 		contents += "    <uses-permission android:name=\"com.oculus.permission.IMPORT_EXPORT_IOT_MAP_DATA\" />\n";
 	}
 

@@ -1,5 +1,10 @@
 # Change history for the Godot OpenXR loaders asset
 
+## Unreleased
+
+- Add support for `XR_META_spatial_entity_group_sharing`
+- Fix storage location reported by `openxr_fb_spatial_entity_saved`
+
 ## 5.1.0
 
 - Add manual page for Android XR Trackables (#499)

@@ -437,10 +437,7 @@ void OpenXRFbSpatialEntity::save_to_storage(StorageLocation p_location) {
 void OpenXRFbSpatialEntity::_on_save_to_storage(XrResult p_result, XrSpaceStorageLocationFB p_location, void *p_userdata) {
 	Ref<OpenXRFbSpatialEntity> *userdata = (Ref<OpenXRFbSpatialEntity> *)p_userdata;
 	(*userdata)->last_result = p_result;
-	Ref<OpenXRAPIExtension> openxr_api = OpenXRFbSpatialEntityExtension::get_singleton()->get_openxr_api();
-	UtilityFunctions::print(vformat("[VRZ] native spatial_entity_save_complete result=%s code=%d location=%d",
-			openxr_api.is_valid() ? openxr_api->get_error_string(p_result) : String("unknown"), (int64_t)p_result, (int)p_location));
-	(*userdata)->emit_signal("openxr_fb_spatial_entity_saved", XR_SUCCEEDED(p_result), (int)p_location);
+	(*userdata)->emit_signal("openxr_fb_spatial_entity_saved", XR_SUCCEEDED(p_result), from_openxr_storage_location(p_location));
 	memdelete(userdata);
 }
 

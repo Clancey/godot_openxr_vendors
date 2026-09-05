@@ -259,11 +259,12 @@ void initialize_plugin_module(ModuleInitializationLevel p_level) {
 				_register_extension_with_openxr(OpenXRFbColorSpaceExtension::get_singleton());
 			}
 
-			// Three settings to match the three permissions for the Android manifest.
+			// Settings that require the Meta anchor API permissions in the Android manifest.
 			bool meta_anchor_api = _get_bool_project_setting("xr/openxr/extensions/meta/anchor_api");
 			bool meta_anchor_sharing = _get_bool_project_setting("xr/openxr/extensions/meta/anchor_sharing");
 			bool meta_scene_api = _get_bool_project_setting("xr/openxr/extensions/meta/scene_api");
-			if (meta_anchor_api || meta_anchor_sharing || meta_scene_api) {
+			bool meta_spatial_entity_group_sharing = _get_bool_project_setting("xr/openxr/extensions/meta/spatial_entity_group_sharing");
+			if (meta_anchor_api || meta_anchor_sharing || meta_scene_api || meta_spatial_entity_group_sharing) {
 				// There are needed by all of them.
 				_register_extension_with_openxr(OpenXRFbSpatialEntityExtension::get_singleton());
 				_register_extension_with_openxr(OpenXRFbSpatialEntityStorageExtension::get_singleton());
@@ -280,6 +281,9 @@ void initialize_plugin_module(ModuleInitializationLevel p_level) {
 				if (meta_anchor_sharing) {
 					_register_extension_with_openxr(OpenXRFbSpatialEntitySharingExtension::get_singleton());
 					_register_extension_with_openxr(OpenXRFbSpatialEntityUserExtension::get_singleton());
+				}
+
+				if (meta_spatial_entity_group_sharing) {
 					_register_extension_with_openxr(OpenXRMetaSpatialEntityGroupSharingExtension::get_singleton());
 				}
 			}
@@ -639,6 +643,7 @@ void add_plugin_project_settings() {
 	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/render_model", false);
 	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/anchor_api", false);
 	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/anchor_sharing", false);
+	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/spatial_entity_group_sharing", false);
 	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/scene_api", false);
 	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/color_space", true);
 	_add_bool_project_setting(project_settings, "xr/openxr/extensions/meta/composition_layer_settings", true);

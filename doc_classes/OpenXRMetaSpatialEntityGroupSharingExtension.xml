@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="OpenXRMetaSpatialEntityGroupSharingExtension" inherits="OpenXRExtensionWrapper" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Wraps the [code]XR_META_spatial_entity_group_sharing[/code] extension.
+	</brief_description>
+	<description>
+		Wraps the [code]XR_META_spatial_entity_group_sharing[/code] extension, which shares spatial anchors with a group UUID and loads anchors previously shared with that group.
+		Enable this extension in Project Settings under [code]xr/openxr/extensions/meta/spatial_entity_group_sharing[/code].
+		A typical flow is to create a spatial anchor, enable [constant OpenXRFbSpatialEntity.COMPONENT_TYPE_STORABLE], save it to [constant OpenXRFbSpatialEntity.STORAGE_CLOUD], enable [constant OpenXRFbSpatialEntity.COMPONENT_TYPE_SHARABLE], and pass it to [method share_anchors]. On another device, call [method load_group_anchors] with the same group UUID, then call [method OpenXRFbSpatialEntity.track] on each loaded anchor.
+	</description>
+	<tutorials>
+		<link title="XR_META_spatial_entity_group_sharing specification">https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#XR_META_spatial_entity_group_sharing</link>
+	</tutorials>
+	<methods>
+		<method name="get_last_result_code" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the raw [code]XrResult[/code] value from the most recent [method share_anchors] operation.
+			</description>
+		</method>
+		<method name="get_last_result_string">
+			<return type="String" />
+			<description>
+				Returns a readable name for the raw [code]XrResult[/code] value from the most recent [method share_anchors] operation.
+			</description>
+		</method>
+		<method name="is_group_sharing_supported" qualifiers="const">
+			<return type="bool" />
+			<description>
+				Returns [code]true[/code] if spatial entity group sharing is supported by the current OpenXR runtime.
+			</description>
+		</method>
+		<method name="load_group_anchors">
+			<return type="bool" />
+			<param index="0" name="group_uuid" type="String" />
+			<param index="1" name="max_results" type="int" default="32" />
+			<param index="2" name="timeout" type="float" default="0.0" />
+			<description>
+				Loads up to [param max_results] spatial anchors shared with [param group_uuid] from cloud storage. [param timeout] is the query timeout in seconds; [code]0.0[/code] uses the runtime's immediate query behavior.
+				Returns [code]true[/code] if the asynchronous request was accepted. The loaded [OpenXRFbSpatialEntity] objects are delivered by [signal openxr_meta_group_anchors_loaded].
+			</description>
+		</method>
+		<method name="share_anchors">
+			<return type="bool" />
+			<param index="0" name="group_uuid" type="String" />
+			<param index="1" name="anchors" type="Array" />
+			<description>
+				Shares the [OpenXRFbSpatialEntity] objects in [param anchors] with [param group_uuid].
+				Each anchor must already be saved to [constant OpenXRFbSpatialEntity.STORAGE_CLOUD] and have [constant OpenXRFbSpatialEntity.COMPONENT_TYPE_SHARABLE] enabled.
+				Returns [code]true[/code] if the asynchronous request was accepted. Completion is reported by [signal openxr_meta_group_anchors_shared].
+			</description>
+		</method>
+	</methods>
+	<signals>
+		<signal name="openxr_meta_group_anchors_loaded">
+			<param index="0" name="anchors" type="Array" />
+			<description>
+				Emitted when [method load_group_anchors] completes. [param anchors] contains the loaded [OpenXRFbSpatialEntity] objects and is empty if no matching anchors were returned.
+			</description>
+		</signal>
+		<signal name="openxr_meta_group_anchors_shared">
+			<param index="0" name="succeeded" type="bool" />
+			<description>
+				Emitted when [method share_anchors] completes.
+			</description>
+		</signal>
+	</signals>
+</class>

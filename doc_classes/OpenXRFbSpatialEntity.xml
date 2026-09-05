@@ -83,6 +83,18 @@
 				The actual [OpenXRFbSpatialEntity] objects can be obtained using [OpenXRFbSpatialEntityQuery].
 			</description>
 		</method>
+		<method name="get_last_result_code" qualifiers="const">
+			<return type="int" />
+			<description>
+				Returns the raw [code]XrResult[/code] value from the most recent asynchronous operation on this spatial entity.
+			</description>
+		</method>
+		<method name="get_last_result_string" qualifiers="const">
+			<return type="String" />
+			<description>
+				Returns a readable name for the raw [code]XrResult[/code] value from the most recent asynchronous operation on this spatial entity.
+			</description>
+		</method>
 		<method name="get_room_layout" qualifiers="const">
 			<return type="Dictionary" />
 			<description>

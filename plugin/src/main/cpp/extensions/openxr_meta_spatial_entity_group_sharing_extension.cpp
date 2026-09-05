@@ -31,7 +31,6 @@
 
 #include <godot_cpp/classes/open_xrapi_extension.hpp>
 #include <godot_cpp/templates/local_vector.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
 
 #include "classes/openxr_fb_spatial_entity.h"
 #include "extensions/openxr_fb_spatial_entity_query_extension.h"
@@ -126,8 +125,6 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::_on_event_polled(const void *
 
 	share_requests.erase(share_event->requestId);
 	last_result = share_event->result;
-	UtilityFunctions::print(vformat("[VRZ] native xrShareSpacesMETA completion request=%d result=%s code=%d",
-			(int64_t)share_event->requestId, get_openxr_api()->get_error_string(share_event->result), (int64_t)share_event->result));
 	emit_signal("openxr_meta_group_anchors_shared", XR_SUCCEEDED(share_event->result));
 	return true;
 }
@@ -165,9 +162,7 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p
 		ERR_FAIL_COND_V_MSG(entity->get_space() == XR_NULL_HANDLE, false, "Anchor array contains a destroyed spatial entity.");
 		if (!entity->is_component_enabled(OpenXRFbSpatialEntity::COMPONENT_TYPE_SHARABLE)) {
 			last_result = XR_ERROR_SPACE_COMPONENT_NOT_ENABLED_FB;
-			UtilityFunctions::print(vformat(
-					"[VRZ] native xrShareSpacesMETA rejected spaces=%d result=XR_ERROR_SPACE_COMPONENT_NOT_ENABLED_FB code=%d reason=enable SHARABLE first",
-					p_anchors.size(), (int64_t)last_result));
+			ERR_PRINT("Cannot share a spatial entity because COMPONENT_TYPE_SHARABLE isn't enabled.");
 			return false;
 		}
 		spaces[i] = entity->get_space();
@@ -189,8 +184,6 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p
 	XrAsyncRequestIdFB request_id = 0;
 	XrResult result = xrShareSpacesMETA((XrSession)get_openxr_api()->get_session(), &info, &request_id);
 	last_result = result;
-	UtilityFunctions::print(vformat("[VRZ] native xrShareSpacesMETA submit request=%d spaces=%d result=%s code=%d",
-			(int64_t)request_id, spaces.size(), get_openxr_api()->get_error_string(result), (int64_t)result));
 	if (XR_FAILED(result)) {
 		WARN_PRINT(vformat("xrShareSpacesMETA failed: %s", get_openxr_api()->get_error_string(result)));
 		emit_signal("openxr_meta_group_anchors_shared", false);
@@ -232,8 +225,6 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::load_group_anchors(const Stri
 			reinterpret_cast<XrSpaceQueryInfoBaseHeaderFB *>(&query),
 			OpenXRMetaSpatialEntityGroupSharingExtension::_on_group_query_completed,
 			this);
-	ERR_PRINT(vformat("[VRZ] native group_query submit accepted=%s group=%s max_results=%d timeout_s=%.3f",
-			accepted ? "true" : "false", p_group_uuid, p_max_results, p_timeout));
 	return accepted;
 }
 
@@ -244,9 +235,7 @@ void OpenXRMetaSpatialEntityGroupSharingExtension::_on_group_query_completed(con
 	for (int i = 0; i < p_results.size(); i++) {
 		results[i] = Ref<OpenXRFbSpatialEntity>(memnew(OpenXRFbSpatialEntity(p_results[i].space, p_results[i].uuid)));
 	}
-	ERR_PRINT(vformat("[VRZ] native group_query entities_created count=%d", results.size()));
 	extension->emit_signal("openxr_meta_group_anchors_loaded", results);
-	ERR_PRINT(vformat("[VRZ] native group_query signal_emitted name=openxr_meta_group_anchors_loaded count=%d", results.size()));
 }
 
 bool OpenXRMetaSpatialEntityGroupSharingExtension::_parse_uuid(const String &p_uuid, XrUuid &r_uuid) {

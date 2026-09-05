@@ -113,8 +113,6 @@ bool OpenXRFbSpatialEntityQueryExtension::query_spatial_entities(const XrSpaceQu
 	XrAsyncRequestIdFB request_id = 0;
 
 	const XrResult result = xrQuerySpacesFB(SESSION, p_info, &request_id);
-	ERR_PRINT(vformat("[VRZ] native xrQuerySpacesFB request=%d result=%s code=%d",
-			(int64_t)request_id, get_openxr_api()->get_error_string(result), (int64_t)result));
 	if (!XR_SUCCEEDED(result)) {
 		WARN_PRINT("xrQuerySpacesFB failed!");
 		WARN_PRINT(get_openxr_api()->get_error_string(result));
@@ -141,8 +139,6 @@ void OpenXRFbSpatialEntityQueryExtension::on_space_query_results(const XrEventDa
 		nullptr, // results
 	};
 	XrResult result = xrRetrieveSpaceQueryResultsFB(SESSION, event->requestId, &queryResults);
-	ERR_PRINT(vformat("[VRZ] native xrRetrieveSpaceQueryResultsFB count request=%d result=%s code=%d count=%d",
-			(int64_t)event->requestId, get_openxr_api()->get_error_string(result), (int64_t)result, queryResults.resultCountOutput));
 	if (!XR_SUCCEEDED(result)) {
 		WARN_PRINT("xrRetrieveSpaceQueryResultsFB failed to get result count!");
 		WARN_PRINT(get_openxr_api()->get_error_string(result));
@@ -156,8 +152,6 @@ void OpenXRFbSpatialEntityQueryExtension::on_space_query_results(const XrEventDa
 	queryResults.results = query->results.ptrw();
 
 	result = xrRetrieveSpaceQueryResultsFB(SESSION, event->requestId, &queryResults);
-	ERR_PRINT(vformat("[VRZ] native xrRetrieveSpaceQueryResultsFB data request=%d result=%s code=%d count=%d",
-			(int64_t)event->requestId, get_openxr_api()->get_error_string(result), (int64_t)result, queryResults.resultCountOutput));
 	if (!XR_SUCCEEDED(result)) {
 		query->results.clear();
 		WARN_PRINT("xrRetrieveSpaceQueryResultsFB failed to get results!");
@@ -172,8 +166,6 @@ void OpenXRFbSpatialEntityQueryExtension::on_space_query_complete(const XrEventD
 		return;
 	}
 	QueryInfo *query = queries.getptr(event->requestId);
-	ERR_PRINT(vformat("[VRZ] native space_query_complete request=%d result=%s code=%d results=%d",
-			(int64_t)event->requestId, get_openxr_api()->get_error_string(event->result), (int64_t)event->result, query->results.size()));
 	query->callback(query->results, query->userdata);
 	queries.erase(event->requestId);
 }
