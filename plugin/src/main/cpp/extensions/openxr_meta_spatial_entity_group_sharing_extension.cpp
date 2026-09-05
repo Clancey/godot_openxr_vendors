@@ -126,7 +126,7 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::_on_event_polled(const void *
 
 	share_requests.erase(share_event->requestId);
 	last_result = share_event->result;
-	ERR_PRINT(vformat("[VRZ] native xrShareSpacesMETA completion request=%d result=%s code=%d",
+	UtilityFunctions::print(vformat("[VRZ] native xrShareSpacesMETA completion request=%d result=%s code=%d",
 			(int64_t)share_event->requestId, get_openxr_api()->get_error_string(share_event->result), (int64_t)share_event->result));
 	emit_signal("openxr_meta_group_anchors_shared", XR_SUCCEEDED(share_event->result));
 	return true;
@@ -142,7 +142,11 @@ int64_t OpenXRMetaSpatialEntityGroupSharingExtension::get_last_result_code() con
 
 String OpenXRMetaSpatialEntityGroupSharingExtension::get_last_result_string() {
 	Ref<OpenXRAPIExtension> openxr_api = get_openxr_api();
-	return openxr_api.is_valid() ? openxr_api->get_error_string(last_result) : String::num_int64((int64_t)last_result);
+	String result = openxr_api.is_valid() ? openxr_api->get_error_string(last_result) : String::num_int64((int64_t)last_result);
+	if (last_result == XR_ERROR_SPACE_COMPONENT_NOT_ENABLED_FB) {
+		result += " (enable SHARABLE first)";
+	}
+	return result;
 }
 
 bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p_group_uuid, const Array &p_anchors) {
@@ -159,6 +163,13 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p
 		Ref<OpenXRFbSpatialEntity> entity = p_anchors[i];
 		ERR_FAIL_COND_V_MSG(entity.is_null(), false, "Anchor array contains an invalid spatial entity.");
 		ERR_FAIL_COND_V_MSG(entity->get_space() == XR_NULL_HANDLE, false, "Anchor array contains a destroyed spatial entity.");
+		if (!entity->is_component_enabled(OpenXRFbSpatialEntity::COMPONENT_TYPE_SHARABLE)) {
+			last_result = XR_ERROR_SPACE_COMPONENT_NOT_ENABLED_FB;
+			UtilityFunctions::print(vformat(
+					"[VRZ] native xrShareSpacesMETA rejected spaces=%d result=XR_ERROR_SPACE_COMPONENT_NOT_ENABLED_FB code=%d reason=enable SHARABLE first",
+					p_anchors.size(), (int64_t)last_result));
+			return false;
+		}
 		spaces[i] = entity->get_space();
 	}
 
@@ -178,7 +189,7 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p
 	XrAsyncRequestIdFB request_id = 0;
 	XrResult result = xrShareSpacesMETA((XrSession)get_openxr_api()->get_session(), &info, &request_id);
 	last_result = result;
-	ERR_PRINT(vformat("[VRZ] native xrShareSpacesMETA submit request=%d spaces=%d result=%s code=%d",
+	UtilityFunctions::print(vformat("[VRZ] native xrShareSpacesMETA submit request=%d spaces=%d result=%s code=%d",
 			(int64_t)request_id, spaces.size(), get_openxr_api()->get_error_string(result), (int64_t)result));
 	if (XR_FAILED(result)) {
 		WARN_PRINT(vformat("xrShareSpacesMETA failed: %s", get_openxr_api()->get_error_string(result)));

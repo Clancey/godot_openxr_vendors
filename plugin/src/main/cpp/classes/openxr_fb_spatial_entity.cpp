@@ -170,6 +170,7 @@ void OpenXRFbSpatialEntity::set_component_enabled(ComponentType p_component, boo
 
 void OpenXRFbSpatialEntity::_on_set_component_enabled_completed(XrResult p_result, XrSpaceComponentTypeFB p_component, bool p_enabled, void *p_userdata) {
 	Ref<OpenXRFbSpatialEntity> *userdata = (Ref<OpenXRFbSpatialEntity> *)p_userdata;
+	(*userdata)->last_result = p_result;
 	(*userdata)->emit_signal("openxr_fb_spatial_entity_set_component_enabled_completed", XR_SUCCEEDED(p_result), from_openxr_component_type(p_component), p_enabled);
 	memdelete(userdata);
 }
