@@ -40,6 +40,7 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/surface_tool.hpp>
 #include <godot_cpp/templates/local_vector.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include "extensions/openxr_fb_scene_extension.h"
 #include "extensions/openxr_fb_spatial_entity_container_extension.h"
@@ -436,9 +437,9 @@ void OpenXRFbSpatialEntity::_on_save_to_storage(XrResult p_result, XrSpaceStorag
 	Ref<OpenXRFbSpatialEntity> *userdata = (Ref<OpenXRFbSpatialEntity> *)p_userdata;
 	(*userdata)->last_result = p_result;
 	Ref<OpenXRAPIExtension> openxr_api = OpenXRFbSpatialEntityExtension::get_singleton()->get_openxr_api();
-	ERR_PRINT(vformat("[VRZ] native spatial_entity_save_complete result=%s code=%d location=%d",
+	UtilityFunctions::print(vformat("[VRZ] native spatial_entity_save_complete result=%s code=%d location=%d",
 			openxr_api.is_valid() ? openxr_api->get_error_string(p_result) : String("unknown"), (int64_t)p_result, (int)p_location));
-	(*userdata)->emit_signal("openxr_fb_spatial_entity_saved", XR_SUCCEEDED(p_result), from_openxr_storage_location(p_location));
+	(*userdata)->emit_signal("openxr_fb_spatial_entity_saved", XR_SUCCEEDED(p_result), (int)p_location);
 	memdelete(userdata);
 }
 
