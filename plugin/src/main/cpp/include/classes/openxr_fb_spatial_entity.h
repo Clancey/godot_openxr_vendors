@@ -65,6 +65,7 @@ private:
 	XrSpace space = XR_NULL_HANDLE;
 	StringName uuid;
 	Dictionary custom_data;
+	XrResult last_result = XR_SUCCESS;
 
 protected:
 	static void _bind_methods();
@@ -79,6 +80,8 @@ protected:
 
 public:
 	StringName get_uuid() const;
+	int64_t get_last_result_code() const;
+	String get_last_result_string() const;
 
 	void set_custom_data(const Dictionary &p_custom_data);
 	Dictionary get_custom_data() const;

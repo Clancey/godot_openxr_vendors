@@ -65,6 +65,8 @@ void OpenXRMetaSpatialEntityGroupSharingExtension::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("is_group_sharing_supported"), &OpenXRMetaSpatialEntityGroupSharingExtension::is_group_sharing_supported);
 	ClassDB::bind_method(D_METHOD("share_anchors", "group_uuid", "anchors"), &OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors);
 	ClassDB::bind_method(D_METHOD("load_group_anchors", "group_uuid", "max_results", "timeout"), &OpenXRMetaSpatialEntityGroupSharingExtension::load_group_anchors, DEFVAL(XR_MAX_SPACES_PER_SHARE_REQUEST_META), DEFVAL(0.0f));
+	ClassDB::bind_method(D_METHOD("get_last_result_code"), &OpenXRMetaSpatialEntityGroupSharingExtension::get_last_result_code);
+	ClassDB::bind_method(D_METHOD("get_last_result_string"), &OpenXRMetaSpatialEntityGroupSharingExtension::get_last_result_string);
 
 	ADD_SIGNAL(MethodInfo("openxr_meta_group_anchors_shared", PropertyInfo(Variant::BOOL, "succeeded")));
 	ADD_SIGNAL(MethodInfo("openxr_meta_group_anchors_loaded", PropertyInfo(Variant::ARRAY, "anchors")));
@@ -123,12 +125,24 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::_on_event_polled(const void *
 	}
 
 	share_requests.erase(share_event->requestId);
+	last_result = share_event->result;
+	ERR_PRINT(vformat("[VRZ] native xrShareSpacesMETA completion request=%d result=%s code=%d",
+			(int64_t)share_event->requestId, get_openxr_api()->get_error_string(share_event->result), (int64_t)share_event->result));
 	emit_signal("openxr_meta_group_anchors_shared", XR_SUCCEEDED(share_event->result));
 	return true;
 }
 
 bool OpenXRMetaSpatialEntityGroupSharingExtension::is_group_sharing_supported() const {
 	return system_supports_group_sharing;
+}
+
+int64_t OpenXRMetaSpatialEntityGroupSharingExtension::get_last_result_code() const {
+	return (int64_t)last_result;
+}
+
+String OpenXRMetaSpatialEntityGroupSharingExtension::get_last_result_string() {
+	Ref<OpenXRAPIExtension> openxr_api = get_openxr_api();
+	return openxr_api.is_valid() ? openxr_api->get_error_string(last_result) : String::num_int64((int64_t)last_result);
 }
 
 bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p_group_uuid, const Array &p_anchors) {
@@ -163,6 +177,9 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::share_anchors(const String &p
 	};
 	XrAsyncRequestIdFB request_id = 0;
 	XrResult result = xrShareSpacesMETA((XrSession)get_openxr_api()->get_session(), &info, &request_id);
+	last_result = result;
+	ERR_PRINT(vformat("[VRZ] native xrShareSpacesMETA submit request=%d spaces=%d result=%s code=%d",
+			(int64_t)request_id, spaces.size(), get_openxr_api()->get_error_string(result), (int64_t)result));
 	if (XR_FAILED(result)) {
 		WARN_PRINT(vformat("xrShareSpacesMETA failed: %s", get_openxr_api()->get_error_string(result)));
 		emit_signal("openxr_meta_group_anchors_shared", false);
@@ -200,10 +217,13 @@ bool OpenXRMetaSpatialEntityGroupSharingExtension::load_group_anchors(const Stri
 		nullptr,
 	};
 
-	return OpenXRFbSpatialEntityQueryExtension::get_singleton()->query_spatial_entities(
+	const bool accepted = OpenXRFbSpatialEntityQueryExtension::get_singleton()->query_spatial_entities(
 			reinterpret_cast<XrSpaceQueryInfoBaseHeaderFB *>(&query),
 			OpenXRMetaSpatialEntityGroupSharingExtension::_on_group_query_completed,
 			this);
+	ERR_PRINT(vformat("[VRZ] native group_query submit accepted=%s group=%s max_results=%d timeout_s=%.3f",
+			accepted ? "true" : "false", p_group_uuid, p_max_results, p_timeout));
+	return accepted;
 }
 
 void OpenXRMetaSpatialEntityGroupSharingExtension::_on_group_query_completed(const Vector<XrSpaceQueryResultFB> &p_results, void *p_userdata) {
@@ -213,7 +233,9 @@ void OpenXRMetaSpatialEntityGroupSharingExtension::_on_group_query_completed(con
 	for (int i = 0; i < p_results.size(); i++) {
 		results[i] = Ref<OpenXRFbSpatialEntity>(memnew(OpenXRFbSpatialEntity(p_results[i].space, p_results[i].uuid)));
 	}
+	ERR_PRINT(vformat("[VRZ] native group_query entities_created count=%d", results.size()));
 	extension->emit_signal("openxr_meta_group_anchors_loaded", results);
+	ERR_PRINT(vformat("[VRZ] native group_query signal_emitted name=openxr_meta_group_anchors_loaded count=%d", results.size()));
 }
 
 bool OpenXRMetaSpatialEntityGroupSharingExtension::_parse_uuid(const String &p_uuid, XrUuid &r_uuid) {
@@ -238,6 +260,7 @@ void OpenXRMetaSpatialEntityGroupSharingExtension::cleanup() {
 	meta_spatial_entity_sharing_ext = false;
 	meta_spatial_entity_group_sharing_ext = false;
 	system_supports_group_sharing = false;
+	last_result = XR_SUCCESS;
 	xrShareSpacesMETA_ptr = nullptr;
 	sharing_properties.next = nullptr;
 	sharing_properties.supportsSpatialEntitySharing = XR_FALSE;

@@ -35,6 +35,7 @@
 #include <godot_cpp/classes/collision_shape3d.hpp>
 #include <godot_cpp/classes/concave_polygon_shape3d.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/classes/open_xrapi_extension.hpp>
 #include <godot_cpp/classes/plane_mesh.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/surface_tool.hpp>
@@ -53,6 +54,8 @@ using namespace godot;
 
 void OpenXRFbSpatialEntity::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_uuid"), &OpenXRFbSpatialEntity::get_uuid);
+	ClassDB::bind_method(D_METHOD("get_last_result_code"), &OpenXRFbSpatialEntity::get_last_result_code);
+	ClassDB::bind_method(D_METHOD("get_last_result_string"), &OpenXRFbSpatialEntity::get_last_result_string);
 	ClassDB::bind_method(D_METHOD("set_custom_data"), &OpenXRFbSpatialEntity::set_custom_data);
 	ClassDB::bind_method(D_METHOD("get_custom_data"), &OpenXRFbSpatialEntity::get_custom_data);
 
@@ -112,6 +115,15 @@ String OpenXRFbSpatialEntity::_to_string() const {
 
 StringName OpenXRFbSpatialEntity::get_uuid() const {
 	return uuid;
+}
+
+int64_t OpenXRFbSpatialEntity::get_last_result_code() const {
+	return (int64_t)last_result;
+}
+
+String OpenXRFbSpatialEntity::get_last_result_string() const {
+	Ref<OpenXRAPIExtension> openxr_api = OpenXRFbSpatialEntityExtension::get_singleton()->get_openxr_api();
+	return openxr_api.is_valid() ? openxr_api->get_error_string(last_result) : String::num_int64((int64_t)last_result);
 }
 
 void OpenXRFbSpatialEntity::set_custom_data(const Dictionary &p_custom_data) {
@@ -395,6 +407,7 @@ Ref<OpenXRFbSpatialEntity> OpenXRFbSpatialEntity::create_spatial_anchor(const Tr
 
 void OpenXRFbSpatialEntity::_on_spatial_anchor_created(XrResult p_result, XrSpace p_space, const XrUuidEXT *p_uuid, void *p_userdata) {
 	Ref<OpenXRFbSpatialEntity> *userdata = (Ref<OpenXRFbSpatialEntity> *)p_userdata;
+	(*userdata)->last_result = p_result;
 	bool success = XR_SUCCEEDED(p_result);
 	if (success) {
 		(*userdata)->space = p_space;
@@ -421,6 +434,10 @@ void OpenXRFbSpatialEntity::save_to_storage(StorageLocation p_location) {
 
 void OpenXRFbSpatialEntity::_on_save_to_storage(XrResult p_result, XrSpaceStorageLocationFB p_location, void *p_userdata) {
 	Ref<OpenXRFbSpatialEntity> *userdata = (Ref<OpenXRFbSpatialEntity> *)p_userdata;
+	(*userdata)->last_result = p_result;
+	Ref<OpenXRAPIExtension> openxr_api = OpenXRFbSpatialEntityExtension::get_singleton()->get_openxr_api();
+	ERR_PRINT(vformat("[VRZ] native spatial_entity_save_complete result=%s code=%d location=%d",
+			openxr_api.is_valid() ? openxr_api->get_error_string(p_result) : String("unknown"), (int64_t)p_result, (int)p_location));
 	(*userdata)->emit_signal("openxr_fb_spatial_entity_saved", XR_SUCCEEDED(p_result), from_openxr_storage_location(p_location));
 	memdelete(userdata);
 }

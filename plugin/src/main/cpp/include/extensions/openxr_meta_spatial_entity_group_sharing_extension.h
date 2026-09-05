@@ -53,6 +53,8 @@ public:
 	bool is_group_sharing_supported() const;
 	bool share_anchors(const String &p_group_uuid, const Array &p_anchors);
 	bool load_group_anchors(const String &p_group_uuid, uint32_t p_max_results = XR_MAX_SPACES_PER_SHARE_REQUEST_META, float p_timeout = 0.0f);
+	int64_t get_last_result_code() const;
+	String get_last_result_string();
 
 	static OpenXRMetaSpatialEntityGroupSharingExtension *get_singleton();
 
@@ -89,4 +91,5 @@ private:
 	bool meta_spatial_entity_sharing_ext = false;
 	bool meta_spatial_entity_group_sharing_ext = false;
 	bool system_supports_group_sharing = false;
+	XrResult last_result = XR_SUCCESS;
 };
